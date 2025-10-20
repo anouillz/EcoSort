@@ -1,0 +1,17 @@
+[project]
+name = "ecosort"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+dependencies = [
+  "numpy",
+  "scikit-learn",
+  "matplotlib",
+  "jupyter",
+  "pandas",
+  "polars",
+
+  # Install Torch only when NOT on Intel macOS
+  "torch>=2.2,<2.4; platform_system != 'Darwin' or platform_machine != 'x86_64'",
+  "torchvision>=0.17,<0.18; platform_system != 'Darwin' or platform_machine != 'x86_64'",
+]

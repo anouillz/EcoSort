@@ -4,7 +4,7 @@ Github policy and how commits and branches should be done
 
 - In general :
     - Always keep a clean version with tested features on the main branch
-    - Create a new branch for a new task ALWAYS from main 
+    - Create a new branch for a new task ALWAYS from main (unless its the initial commits)
     - Make a pull request that has to be reviewed for, at least, one other teammate 
 
 
@@ -14,6 +14,7 @@ Github policy and how commits and branches should be done
         - feat: if changes are a new feature
         - fix: if commit was for fixing an issue
         - doc: for docummentation 
+        - chore: for project configurations
 
 - Branches : 
     - New branches should be created from main
