@@ -1,0 +1,30 @@
+# --- Python / build ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+build/
+dist/
+*.egg-info/
+
+# --- Virtual environnement ---
+.venv/
+backend/.venv/
+venv/
+ENV/
+
+# --- tools / IDE ---
+.vscode/
+.idea/
+
+# --- macOS ---
+.DS_Store
+
+# --- YOLO folder (input/output for testing) ---
+yolo_input/
+yolo_output/
+backend/yolo_input/
+backend/yolo_output/
+
+# --- Poids de modèles ---
+*.pt
