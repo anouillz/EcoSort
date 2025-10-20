@@ -35,8 +35,11 @@ def crop_multilple_objects(image, output_dir="yolo_output"):
                 continue
 
             cropped = image[y1:y2, x1:x2]
+            """
+            # save cropped images
             filename = os.path.join(output_dir, f"object_{i}.jpg")
             cv2.imwrite(filename, cropped)
+            """
             cropped_images.append(cropped)
 
     return cropped_images
