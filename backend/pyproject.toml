@@ -15,4 +15,6 @@ dependencies = [
   "fastapi",
   "uvicorn[standard]",
   "python-multipart",
+  "ultralytics",
+  "opencv-python",
 ]
