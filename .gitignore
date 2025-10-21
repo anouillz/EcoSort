@@ -12,6 +12,7 @@ dist/
 backend/.venv/
 venv/
 ENV/
+backend/uv.lock
 
 # --- tools / IDE ---
 .vscode/
@@ -28,3 +29,6 @@ backend/yolo_output/
 
 # --- Poids de modèles ---
 *.pt
+
+# --- Datasets folder ---
+backend/ML/data/
