@@ -12,6 +12,7 @@ dist/
 backend/.venv/
 venv/
 ENV/
+*.lock
 
 # --- tools / IDE ---
 .vscode/
