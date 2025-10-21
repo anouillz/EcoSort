@@ -13,7 +13,7 @@ STD = [0.229, 0.224, 0.225]
 
 def load_model(weights_path: str, device: str | None = None) -> nn.Module:
     import torchvision.models
-    torch.serialization.add_safe_globals([torchvision.models.efficientnet.EfficientNet])
+    #torch.serialization.add_safe_globals([torchvision.models.efficientnet.EfficientNet])
 
     dev = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
     obj = torch.load(weights_path, map_location=dev, weights_only=False)
@@ -34,9 +34,9 @@ def make_transform() -> transforms.Compose:
     ])
 
 @torch.inference_mode()
-def predict_one(model: nn.Module, image_path: str) -> tuple[str, int, float]:
+def predict_one(model: nn.Module, image) -> tuple[str, int, float]:
     dev = next(model.parameters()).device
-    img = load_image(image_path)
+    img = image
     x = make_transform()(img).unsqueeze(0).to(dev)
     logits = model(x)
     probs = torch.softmax(logits, dim=1).squeeze(0)
