@@ -11,5 +11,8 @@ dependencies = [
   "pandas",
   "polars",
   "torch",
-  "torchvision"
+  "torchvision",
+  "fastapi",
+  "uvicorn[standard]",
+  "python-multipart",
 ]
