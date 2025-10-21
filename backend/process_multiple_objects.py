@@ -42,18 +42,20 @@ def crop_multilple_objects(image, output_dir="yolo_output"):
             """
             cropped_images.append(cropped)
 
+            # Print number of objects detected
+            print(f"number of objects detected: {len(boxes)}")
+
     return cropped_images
 
 
 # ------------------- testing
 
-img_test = cv2.imread("yolo_input/test_1.jpg")
+img_test = cv2.imread("yolo_input/metal_008.jpg")
 images = crop_multilple_objects(img_test)
 
-""""
+
 # display cropped images
 for i, img in enumerate(images):
     cv2.imshow(f"Cropped Object {i}", img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-"""
