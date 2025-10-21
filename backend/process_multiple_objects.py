@@ -1,17 +1,23 @@
 from ultralytics import YOLO
 import cv2
 import os
+import numpy as np
 
 # Load pretrained YOLOv8 model (COCO dataset) once
 model = YOLO("yolov8n.pt")
 
-def crop_multilple_objects(image, output_dir="yolo_output"):
+def crop_multilple_objects(file, output_dir="yolo_output"):
     """
     Detects and crops all objects from the given image (numpy array, BGR).
     Returns a list of cropped images (numpy arrays).
     """
-    if image is None:
+    if file is None:
         raise ValueError("image is None")
+    
+    # Read image from UploadFile
+    file_bytes = file.file.read()
+    np_arr = np.frombuffer(file_bytes, np.uint8)
+    image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
     os.makedirs(output_dir, exist_ok=True)
     results = model(image)
@@ -35,7 +41,7 @@ def crop_multilple_objects(image, output_dir="yolo_output"):
                 continue
 
             cropped = image[y1:y2, x1:x2]
-            """
+            """ 
             # save cropped images
             filename = os.path.join(output_dir, f"object_{i}.jpg")
             cv2.imwrite(filename, cropped)
@@ -50,7 +56,7 @@ def crop_multilple_objects(image, output_dir="yolo_output"):
 
 # ------------------- testing
 
-img_test = cv2.imread("yolo_input/metal_008.jpg")
+""" img_test = cv2.imread("yolo_input/metal_008.jpg")
 images = crop_multilple_objects(img_test)
 
 
@@ -58,4 +64,4 @@ images = crop_multilple_objects(img_test)
 for i, img in enumerate(images):
     cv2.imshow(f"Cropped Object {i}", img)
 cv2.waitKey(0)
-cv2.destroyAllWindows()
+cv2.destroyAllWindows() """

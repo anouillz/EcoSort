@@ -1,5 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from pathlib import Path
+from process_multiple_objects import crop_multilple_objects
 
 router = APIRouter(prefix="/predict", tags=["predict"])
 
@@ -28,7 +29,11 @@ async def predict_many(file: UploadFile = File(...)):
     if not (file.content_type or "").startswith("image/"):
         raise HTTPException(status_code=415, detail="File must be an image")
     
-    #TODO call function to process multi-object detection
+    print("File received for multi-object detection: ", type(file))
+    images = crop_multilple_objects(file)
+    for i, img in enumerate(images):
+        print(f"Cropped Object {i} shape: {img.shape}")
+        #TODO call model and process images here
 
     # Return confirmation
     return {"message": f"File '{file.filename}' received for multi-object detection."}
