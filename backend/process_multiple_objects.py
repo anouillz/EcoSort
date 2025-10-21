@@ -1,67 +1,67 @@
 from ultralytics import YOLO
 import cv2
-import os
 import numpy as np
+from PIL import Image
+import os
 
 # Load pretrained YOLOv8 model (COCO dataset) once
 model = YOLO("yolov8n.pt")
 
 def crop_multilple_objects(file, output_dir="yolo_output"):
     """
-    Detects and crops all objects from the given image (numpy array, BGR).
-    Returns a list of cropped images (numpy arrays).
+    Detects and crops all objects from the given image.
+    Returns a list of tuples: (box_norm, cropped_image_PIL)
+      - box_norm = [x1/w, y1/h, x2/w, y2/h]  (normalized to [0..1] in original image space)
+      - cropped_image_PIL = PIL.Image in RGB
     """
     if file is None:
-        raise ValueError("image is None")
-    
-    # Read image from UploadFile
+        raise ValueError("file is None")
+
+    # Read bytes from UploadFile
+    try:
+        file.file.seek(0)  # ensure start
+    except Exception:
+        pass
     file_bytes = file.file.read()
-    np_arr = np.frombuffer(file_bytes, np.uint8)
-    image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    np_arr = np.frombuffer(file_bytes, dtype=np.uint8)
+    img_bgr = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)  # BGR
 
+    if img_bgr is None:
+        raise ValueError("Could not decode image")
+
+    h, w = img_bgr.shape[:2]
     os.makedirs(output_dir, exist_ok=True)
-    results = model(image)
-    cropped_images = []
 
-    for result in results:
-        boxes = result.boxes.xyxy  # x1, y1, x2, y2
+    # Run YOLO
+    results = model(img_bgr)
 
-        # if we want to give specific names or classes
-        classes = result.boxes.cls  # class ids
-        names = result.names        # class names
+    crops = []
+    for res in results:
+        # xyxy may be a torch tensor; convert to numpy
+        boxes = res.boxes.xyxy
+        if hasattr(boxes, "cpu"):
+            boxes = boxes.cpu().numpy()
+        else:
+            boxes = np.asarray(boxes)
 
-        for i, box in enumerate(boxes):
-            x1, y1, x2, y2 = map(int, box)
-
-            # Clip to image bounds
-            h, w = image.shape[:2]
-            x1, y1 = max(0, x1), max(0, y1)
-            x2, y2 = min(w, x2), min(h, y2)
+        for (x1, y1, x2, y2) in boxes:
+            # Clip and int-cast
+            x1 = max(0, min(w, int(round(float(x1)))))
+            y1 = max(0, min(h, int(round(float(y1)))))
+            x2 = max(0, min(w, int(round(float(x2)))))
+            y2 = max(0, min(h, int(round(float(y2)))))
             if x2 <= x1 or y2 <= y1:
                 continue
 
-            cropped = image[y1:y2, x1:x2]
-            """ 
-            # save cropped images
-            filename = os.path.join(output_dir, f"object_{i}.jpg")
-            cv2.imwrite(filename, cropped)
-            """
-            cropped_images.append(cropped)
+            # Crop and convert to PIL (RGB)
+            crop_bgr = img_bgr[y1:y2, x1:x2]
+            crop_rgb = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2RGB)
+            crop_pil = Image.fromarray(crop_rgb)
 
-            # Print number of objects detected
-            print(f"number of objects detected: {len(boxes)}")
+            # Normalize box for frontend overlay
+            box_norm = [x1 / w, y1 / h, x2 / w, y2 / h]
 
-    return cropped_images
+            crops.append((box_norm, crop_pil))
 
-
-# ------------------- testing
-
-""" img_test = cv2.imread("yolo_input/metal_008.jpg")
-images = crop_multilple_objects(img_test)
-
-
-# display cropped images
-for i, img in enumerate(images):
-    cv2.imshow(f"Cropped Object {i}", img)
-cv2.waitKey(0)
-cv2.destroyAllWindows() """
+    print(f"number of objects detected: {len(crops)}")
+    return crops

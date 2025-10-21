@@ -4,6 +4,9 @@ from process_multiple_objects import crop_multilple_objects
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from io import BytesIO
 from PIL import Image, ImageOps
+import time
+from collections import Counter
+
 
 
 # Import model utilities
@@ -63,13 +66,28 @@ async def predict_many(file: UploadFile = File(...)):
     if not (file.content_type or "").startswith("image/"):
         raise HTTPException(status_code=415, detail="File must be an image")
     
-    print("File received for multi-object detection: ", type(file))
-    images = crop_multilple_objects(file)
-    for i, img in enumerate(images):
-        print(f"Cropped Object {i} shape: {img.shape}")
-        #TODO call model and process images here
+    # check model loaded
+    if model is None:
+        raise HTTPException(status_code=500, detail="Model not loaded on server.")
+    
+    t0 = time.perf_counter()
 
-    # Return confirmation
-    return {"message": f"File '{file.filename}' received for multi-object detection."}
+    try:
+        crops = crop_multilple_objects(file)  # ✅ now returns [(box, PIL.Image), ...]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cropping failed: {e}")
 
+    items = []
+    for i, (box, img) in enumerate(crops):
+        class_name, class_idx, confidence = predict_one(model, img)
+        items.append({
+            "box": box,
+            "material": class_name,
+            "score": confidence,
+            "recyclable": class_name in ["glass", "metal", "paper", "cardboard", "plastic"],
+        })
 
+    counts = Counter(it["material"] for it in items)
+    latency = round((time.perf_counter() - t0) * 1000, 1)
+
+    return {"items": items, "counts": counts, "latency_ms": latency}
