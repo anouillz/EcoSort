@@ -28,3 +28,6 @@ backend/yolo_output/
 
 # --- Poids de modèles ---
 *.pt
+
+# --- Datasets folder ---
+backend/ML/data/
