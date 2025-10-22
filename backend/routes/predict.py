@@ -7,11 +7,11 @@ from PIL import Image, ImageOps
 import time
 from collections import Counter
 
-
-
 # Import model utilities
 from ML.single_garbage_detection import load_model, predict_one
 from process_multiple_objects import crop_multilple_objects
+
+CONF_TRESHHOLD = 0.5
 
 
 router = APIRouter(prefix="/predict", tags=["predict"])
@@ -51,8 +51,8 @@ async def predict_single(file: UploadFile = File(...)):
 
 
     return {
-        "label": class_name,   # e.g. "plastic"
-        "proba": confidence,   # 0..1
+        "label": class_name,   
+        "proba": confidence,   
     }
 
 
@@ -73,19 +73,20 @@ async def predict_many(file: UploadFile = File(...)):
     t0 = time.perf_counter()
 
     try:
-        crops = crop_multilple_objects(file)  # ✅ now returns [(box, PIL.Image), ...]
+        crops = crop_multilple_objects(file)  
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Cropping failed: {e}")
 
     items = []
     for i, (box, img) in enumerate(crops):
         class_name, class_idx, confidence = predict_one(model, img)
-        items.append({
-            "box": box,
-            "material": class_name,
-            "score": confidence,
-            "recyclable": class_name in ["glass", "metal", "paper", "cardboard", "plastic"],
-        })
+        if confidence > CONF_TRESHHOLD:
+            items.append({
+                "box": box,
+                "material": class_name,
+                "score": confidence,
+                "recyclable": class_name in ["glass", "metal", "paper", "cardboard", "plastic"],
+            })
 
     counts = Counter(it["material"] for it in items)
     latency = round((time.perf_counter() - t0) * 1000, 1)
