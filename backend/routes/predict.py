@@ -75,7 +75,7 @@ async def predict_many(file: UploadFile = File(...)):
         crops = crop_multiple_objects(file)  
     except Exception as e:
         import traceback
-        traceback.print_exc()   # show the real Python traceback in terminal
+        traceback.print_exc()  
         raise HTTPException(status_code=500, detail=f"Cropping failed: {e}")
 
     items = []
