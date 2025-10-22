@@ -7,7 +7,7 @@ import os
 # Load pretrained YOLOv8 model (COCO dataset) once
 model = YOLO("yolov8n.pt")
 
-def crop_multilple_objects(
+def crop_multiple_objects(
     file,
     output_dir="yolo_output",
     conf_thresh=0.35,          # raise to reduce false positives
