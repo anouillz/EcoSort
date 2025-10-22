@@ -1,6 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from pathlib import Path
-from process_multiple_objects import crop_multilple_objects
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from io import BytesIO
 from PIL import Image, ImageOps
@@ -9,7 +8,7 @@ from collections import Counter
 
 # Import model utilities
 from ML.single_garbage_detection import load_model, predict_one
-from process_multiple_objects import crop_multilple_objects
+from process_multiple_objects import crop_multiple_objects
 
 CONF_TRESHHOLD = 0.5
 
@@ -73,8 +72,10 @@ async def predict_many(file: UploadFile = File(...)):
     t0 = time.perf_counter()
 
     try:
-        crops = crop_multilple_objects(file)  
+        crops = crop_multiple_objects(file)  
     except Exception as e:
+        import traceback
+        traceback.print_exc()   # show the real Python traceback in terminal
         raise HTTPException(status_code=500, detail=f"Cropping failed: {e}")
 
     items = []

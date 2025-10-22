@@ -7,7 +7,6 @@ from routes.predict import router as predict_router
 app = FastAPI(title="EcoSort API", version="0.1.0")
 
 # --- CORS ---
-# TODO adjust ports as needed
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
