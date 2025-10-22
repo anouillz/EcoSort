@@ -8,8 +8,7 @@ import kagglehub
 DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
 DATASETS = {
     "asdasdasasdas/garbage-classification": "garbage-classification",
-    "sumn2u/garbage-classification-v2": "garbage-classification-v2",
-    "farzadnekouei/trash-type-image-dataset": "trash-type-image-dataset",
+    # "sumn2u/garbage-classification-v2": "garbage-classification-v2",
     "zlatan599/garbage-dataset-classification": "garbage-dataset-classification",
 }
 # ==========================================================
