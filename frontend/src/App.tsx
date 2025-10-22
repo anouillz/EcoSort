@@ -25,12 +25,12 @@ type PredictManyResponse = {
 };
 
 const MATERIAL_COLORS: Record<string, string> = {
-  verre: "#00a3a3",
-  plastique: "#0078d4",
+  glass: "#00a3a3",
+  plastic: "#0078d4",
   metal: "#f59e0b",
-  papier_carton: "#16a34a",
-  organique: "#8b5cf6",
-  autre: "#ef4444",
+  cardboard: "#16a34a",
+  paper: "#8b5cf6",
+  trash: "#ef4444",
 };
 
 const CAPTURE = { MAX_LONG: 1024, QUALITY: 0.8 };
