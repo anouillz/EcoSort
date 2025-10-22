@@ -3,13 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.health import router as health_router
 from routes.predict import router as predict_router
 
+
 app = FastAPI(title="EcoSort API", version="0.1.0")
 
 # --- CORS ---
-# TODO adjust ports as needed
 ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 app.add_middleware(
@@ -19,6 +19,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # --- Routers ---
 app.include_router(health_router)

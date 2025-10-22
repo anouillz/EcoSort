@@ -25,12 +25,12 @@ type PredictManyResponse = {
 };
 
 const MATERIAL_COLORS: Record<string, string> = {
-  verre: "#00a3a3",
-  plastique: "#0078d4",
+  glass: "#00a3a3",
+  plastic: "#0078d4",
   metal: "#f59e0b",
-  papier_carton: "#16a34a",
-  organique: "#8b5cf6",
-  autre: "#ef4444",
+  cardboard: "#16a34a",
+  paper: "#8b5cf6",
+  trash: "#ef4444",
 };
 
 const CAPTURE = { MAX_LONG: 1024, QUALITY: 0.8 };
@@ -129,10 +129,10 @@ function OverlayBoxes({
     for (const it of items) {
       const [x1, y1, x2, y2] = it.box;
       const color = MATERIAL_COLORS[it.material] || "#111827";
-      const sx1 = Math.round((x1 - 0) * scale);
-      const sy1 = Math.round((y1 - 0) * scale);
-      const sx2 = Math.round((x2 - 0) * scale);
-      const sy2 = Math.round((y2 - 0) * scale);
+      const sx1 = Math.round(it.box[0] * imgRect.w);
+      const sy1 = Math.round(it.box[1] * imgRect.h);
+      const sx2 = Math.round(it.box[2] * imgRect.w);
+      const sy2 = Math.round(it.box[3] * imgRect.h);
       const w = sx2 - sx1, h = sy2 - sy1;
       ctx.lineWidth = 3;
       ctx.strokeStyle = color;
