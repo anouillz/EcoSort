@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "react-qr-code";
 
-// =========================
-// Types pour l'API ML
-// =========================
-
 type TopItem = { label: string; proba: number };
 
 type PredictSingleResponse = {
@@ -28,25 +24,16 @@ type PredictManyResponse = {
   latency_ms?: number;
 };
 
-// =========================
-// Constantes UI & Capture
-// =========================
-
 const MATERIAL_COLORS: Record<string, string> = {
-  verre: "#00a3a3",
-  plastique: "#0078d4",
+  glass: "#00a3a3",
+  plastic: "#0078d4",
   metal: "#f59e0b",
-  papier_carton: "#16a34a",
-  organique: "#8b5cf6",
-  autre: "#ef4444",
+  cardboard: "#16a34a",
+  paper: "#8b5cf6",
+  trash: "#ef4444",
 };
 
-// Réglage unique pour photo & live
 const CAPTURE = { MAX_LONG: 1024, QUALITY: 0.8 } as const;
-
-// =========================
-// WebRTC helpers (signalisation via FastAPI WS)
-// =========================
 
 const RTC_CONFIG: RTCConfiguration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -57,22 +44,10 @@ function mkId(len = 6) {
   return Array.from({ length: len }, () => a[Math.floor(Math.random() * a.length)]).join("");
 }
 
-function wsUrl(baseApi: string, room: string, role: "pc" | "phone") {
-  // baseApi ex: http://localhost:8000 -> ws://localhost:8000/ws/relay/<room>?role=pc|phone
-  const u = new URL(baseApi);
-  const wsProto = u.protocol === "https:" ? "wss:" : "ws:";
-  return `${wsProto}//${u.host}/ws/relay/${room}?role=${role}`;
-}
-
 function wsUrlSameOrigin(room: string, role: "pc" | "phone") {
   const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${wsProto}//${window.location.host}/ws/relay/${room}?role=${role}`;
 }
-
-
-// =========================
-// Hooks utilitaires
-// =========================
 
 function useApiBase() {
   const [apiBase] = useState(() => `${window.location.origin}/api`);
@@ -80,7 +55,6 @@ function useApiBase() {
 }
 
 function useLocalMedia() {
-  // flux caméra locale (pour mode PC sans téléphone)
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -144,10 +118,6 @@ function useSessionStats() {
   return { counts, frames, addCounts, reset } as const;
 }
 
-// =========================
-// Overlay des boîtes
-// =========================
-
 function OverlayBoxes({ items, imgRect, scale }: { items: ManyItem[]; imgRect: { x: number; y: number; w: number; h: number } | null; scale: number; }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -158,12 +128,11 @@ function OverlayBoxes({ items, imgRect, scale }: { items: ManyItem[]; imgRect: {
     const ctx = canvas.getContext("2d")!;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (const it of items) {
-      const [x1, y1, x2, y2] = it.box;
       const color = MATERIAL_COLORS[it.material] || "#111827";
-      const sx1 = Math.round(x1 * scale);
-      const sy1 = Math.round(y1 * scale);
-      const sx2 = Math.round(x2 * scale);
-      const sy2 = Math.round(y2 * scale);
+      const sx1 = Math.round(it.box[0] * imgRect.w);
+      const sy1 = Math.round(it.box[1] * imgRect.h);
+      const sx2 = Math.round(it.box[2] * imgRect.w);
+      const sy2 = Math.round(it.box[3] * imgRect.h);
       const w = sx2 - sx1, h = sy2 - sy1;
       ctx.lineWidth = 3;
       ctx.strokeStyle = color;
@@ -179,10 +148,6 @@ function OverlayBoxes({ items, imgRect, scale }: { items: ManyItem[]; imgRect: {
   }, [items, imgRect, scale]);
   return <canvas ref={canvasRef} style={{ position: "absolute", inset: 0 }} />;
 }
-
-// =========================
-// Page PHONE (publisher) – /phone?room=ABC123
-// =========================
 
 function PhonePublisher({ apiBase }: { apiBase: string }) {
   const videoSelfRef = useRef<HTMLVideoElement>(null);
@@ -223,7 +188,7 @@ function PhonePublisher({ apiBase }: { apiBase: string }) {
         const ws = new WebSocket(wsUrlSameOrigin(room, "phone"));
         wsRef.current = ws;
 
-        ws.onopen = () => setStatus("waiting-offer");   // 👈 visible pendant qu’on attend l’offer
+        ws.onopen = () => setStatus("waiting-offer");   
 
         ws.onmessage = async (e) => {
           const msg = JSON.parse(e.data);
@@ -267,23 +232,16 @@ function PhonePublisher({ apiBase }: { apiBase: string }) {
   );
 }
 
-// =========================
-// APP principale (PC viewer + ML)
-// =========================
-
 export default function App() {
   const { apiBase, setApiBase } = useApiBase();
 
-  // Détection de la page phone
   const isPhone = typeof window !== 'undefined' && window.location.pathname.startsWith('/phone');
   if (isPhone) {
     return <PhonePublisher apiBase={apiBase} />;
   }
 
-  // Caméra locale (fallback si pas de téléphone)
   const { videoRef: localVideoRef, ready: localReady } = useLocalMedia();
 
-  // WebRTC côté PC (viewer)
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -291,7 +249,6 @@ export default function App() {
   const [roomId, setRoomId] = useState<string>("");
   const offeredRef = useRef(false); 
 
-  // UI/ML states
   const [tab, setTab] = useState<"single" | "many" | "live">("single");
   const [busy, setBusy] = useState(false);
   const [lastRtt, setLastRtt] = useState<number | null>(null);
@@ -303,7 +260,6 @@ export default function App() {
 
   const [usePhone, setUsePhone] = useState(false);
 
-  // Layout & overlay
   const containerRef = useRef<HTMLDivElement>(null);
   const [imgRect, setImgRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   useEffect(() => {
@@ -324,11 +280,9 @@ export default function App() {
     if (!remoteReady) setUsePhone(false);
   }, [remoteReady]);
 
-  // Vidéo active = priorité au flux remote si prêt, sinon local
   const activeVideoEl = (remoteReady && remoteVideoRef.current) ? remoteVideoRef.current : localVideoRef.current;
   const scale = imgRect && activeVideoEl?.videoWidth ? (imgRect.w / activeVideoEl.videoWidth) : 1;
 
-  // API ML
   const postImage = useCallback(async (endpoint: "/predict/single" | "/predict/many", blob: Blob) => {
     const fd = new FormData(); fd.append("file", blob, "frame.jpg");
     const t0 = performance.now();
@@ -340,7 +294,6 @@ export default function App() {
     return { json, rtt, latency };
   }, [apiBase]);
 
-  // Capture unique (photo)
   const takePhoto = useCallback(async () => {
     if (!activeVideoEl) return;
     setBusy(true);
@@ -359,7 +312,6 @@ export default function App() {
     finally { setBusy(false); }
   }, [tab, postImage, addCounts, activeVideoEl]);
 
-  // Live piloté par la réponse
   const [live, setLive] = useState(false);
   const liveLoop = useCallback(async () => {
     if (!live || !activeVideoEl) return;
@@ -397,7 +349,6 @@ export default function App() {
 
   useEffect(() => { if (tab !== "live") setLive(false); }, [tab]);
 
-  // QR vers la page /phone?room=RID (même host que le front)
   const qrUrl = useMemo(() => {
     const rid = roomId || mkId();
     if (!roomId) setRoomId(rid);
@@ -409,7 +360,6 @@ export default function App() {
 
   const totalSession = useMemo(() => Object.values(sessionCounts).reduce((a, b) => a + b, 0), [sessionCounts]);
 
-  // --- Démarrage WebRTC côté PC (viewer) ---
   const startViewer = useCallback(async () => {
     const rid = roomId || mkId();
     if (!roomId) setRoomId(rid);
@@ -476,8 +426,6 @@ export default function App() {
         <div className="header-inner" style={{ display: 'flex', alignItems: 'center', gap: 12, maxWidth: '1100px', margin: '0 auto', padding: '8px 16px' }}>
           <div className="title">♻️ EcoSort</div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* <span className="muted">API:</span> */}
-            {/* <input value={apiBase} onChange={(e) => setApiBase(e.target.value)} placeholder="http://localhost:8000" style={{ width: '260px' }} /> */}
           </div>
         </div>
       </header>
@@ -631,10 +579,6 @@ export default function App() {
     </div>
   );
 }
-
-// =========================
-// Tableau des comptes (droite)
-// =========================
 
 function CountsTable({ counts }: { counts: Record<string, number> }) {
   const mats = Object.keys(counts).sort();

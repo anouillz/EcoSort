@@ -48,7 +48,7 @@ async def ws_relay(ws: WebSocket, room_id: str, role: str = Query(...)):
             typ = msg.get("type")
 
             if typ in ("websocket.disconnect", "websocket.close"):
-                break  # STOP: ne pas appeler receive() à nouveau
+                break 
 
             other = rooms.get(room_id, {}).get(other_role)
             if not other or other.client_state != WebSocketState.CONNECTED:
@@ -64,9 +64,7 @@ async def ws_relay(ws: WebSocket, room_id: str, role: str = Query(...)):
                     await other.send_bytes(msg["bytes"])
                 except Exception:
                     pass
-            # autres types (ping/pong) ignorés
     except (WebSocketDisconnect, RuntimeError):
-        # RuntimeError survient si receive() est rappelé après disconnect
         pass
     finally:
         # cleanup

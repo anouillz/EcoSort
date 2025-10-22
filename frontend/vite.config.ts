@@ -7,8 +7,8 @@ const certDir = path.resolve(__dirname, 'certs')
 
 // mkcert -install
 // mkcert ip localhost
-// copy C:\Windows\System32\ip+1*.pem
-// Change ici si ton backend n'est pas sur 10.37.76.4:8000
+// copy ip+1*.pem
+
 const BACKEND_ORIGIN = process.env.BACKEND_ORIGIN || 'http://127.0.0.1:8000'
 const apiUrl = new URL(BACKEND_ORIGIN)
 const wsTarget = `${apiUrl.protocol === 'https:' ? 'wss:' : 'ws:'}//${apiUrl.host}`
