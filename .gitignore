@@ -32,3 +32,6 @@ backend/yolo_output/
 
 # --- Datasets folder ---
 backend/ML/data/
+
+# SSL certificates
+*.pem

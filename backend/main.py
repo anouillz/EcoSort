@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.health import router as health_router
 from routes.predict import router as predict_router
+from routes.signaling import router as signaling_router
 
 
 app = FastAPI(title="EcoSort API", version="0.1.0")
@@ -24,3 +25,4 @@ app.add_middleware(
 # --- Routers ---
 app.include_router(health_router)
 app.include_router(predict_router)
+app.include_router(signaling_router)
