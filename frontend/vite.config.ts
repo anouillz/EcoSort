@@ -7,7 +7,7 @@ const certDir = path.resolve(__dirname, 'certs')
 
 // mkcert -install
 // mkcert ip localhost
-// copy ip+1*.pem
+// copy ip+1*.pem to frontend/certs and rename to local-cert.pem and local-key.pem
 
 const BACKEND_ORIGIN = process.env.BACKEND_ORIGIN || 'http://127.0.0.1:8000'
 const apiUrl = new URL(BACKEND_ORIGIN)
