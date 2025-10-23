@@ -12,11 +12,10 @@ from process_multiple_objects import crop_multiple_objects
 
 CONF_TRESHHOLD = 0.5
 
-
 router = APIRouter(prefix="/predict", tags=["predict"])
 
-# ---- Load model once when this router is imported ----
-MODEL_PATH = Path("ML/model/garbage_classification_model.pth")
+# load our prediction model 
+MODEL_PATH = Path("ML/model/garbage_classification_model_12k.pth")
 
 try:
     model = load_model(MODEL_PATH)
@@ -71,6 +70,7 @@ async def predict_many(file: UploadFile = File(...)):
     
     t0 = time.perf_counter()
 
+    # crop multiple objects
     try:
         crops = crop_multiple_objects(file)  
     except Exception as e:
@@ -78,9 +78,11 @@ async def predict_many(file: UploadFile = File(...)):
         traceback.print_exc()  
         raise HTTPException(status_code=500, detail=f"Cropping failed: {e}")
 
+    # Run predictions on cropped images
     items = []
     for i, (box, img) in enumerate(crops):
         class_name, class_idx, confidence = predict_one(model, img)
+        # filter by confidence
         if confidence > CONF_TRESHHOLD:
             items.append({
                 "box": box,
