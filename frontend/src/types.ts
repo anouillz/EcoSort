@@ -1,5 +1,7 @@
 export type TopItem = { label: string; proba: number };
 
+export type BBox = [number, number, number, number];
+
 export type PredictSingleResponse = {
   label: string;
   proba: number;

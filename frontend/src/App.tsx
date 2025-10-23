@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "react-qr-code";
 
 import { CAPTURE, MATERIAL_COLORS, RTC_CONFIG } from "./constants";
-import { mkId, wsUrlSameOrigin } from "./utils/misc";
+import { mkId, wsUrlSameOrigin, countByMaterial } from "./utils/misc";
 import { drawToBlob, formatPercent } from "./utils/video";
+import { getTracker } from "./utils/dedupe";
 
 import { useApiBase } from "./hooks/useApiBase";
 import { useLocalMedia } from "./hooks/useLocalMedia";
@@ -60,6 +61,12 @@ export default function App() {
   useEffect(() => { if (!remoteReady) setUsePhone(false); }, [remoteReady]);
 
   const activeVideoEl = (usePhone && remoteReady && remoteVideoRef.current) ? remoteVideoRef.current : localVideoRef.current;
+
+  const handleResetSession = useCallback(() => {
+    resetSession();
+    getTracker("pc").reset();
+    if (roomId) getTracker(`phone:${roomId}`).reset();
+  }, [resetSession, roomId]);
 
   const postImage = useCallback(async (endpoint: "/predict/single" | "/predict/many", blob: Blob) => {
     const fd = new FormData(); fd.append("file", blob, "frame.jpg");
@@ -120,7 +127,9 @@ export default function App() {
         const blob = await drawToBlob(src, CAPTURE.MAX_LONG, CAPTURE.QUALITY);
         const { json } = await postImage("/predict/many", blob);
         setMany(json);
-        if (json?.counts) addCounts(json.counts);
+        const tracker = getTracker(cameraId);
+        const fresh = tracker.dedupe(json.items);
+        if (fresh.length) addCounts(countByMaterial(fresh));
       } catch (e) {
         console.error(e);
       } finally {
@@ -145,7 +154,7 @@ export default function App() {
 
   // QR and signaling
   const qrUrl = useMemo(() => {
-    const rid = mkId();
+    const rid = roomId || mkId();
     if (!roomId) setRoomId(rid);
     const u = new URL(window.location.href);
     u.pathname = "/phone";
@@ -158,8 +167,13 @@ export default function App() {
     [sessionCounts]
   );
 
+  const cameraId = useMemo(
+    () => (usePhone && remoteReady ? `phone:${roomId || "unknown"}` : "pc"),
+    [usePhone, remoteReady, roomId]
+  );
+
   const startViewer = useCallback(async () => {
-    const rid = mkId();
+    const rid = roomId || mkId();
     if (!roomId) setRoomId(rid);
 
     const pc = new RTCPeerConnection(RTC_CONFIG);
@@ -293,7 +307,7 @@ export default function App() {
                 {busy ? "Analyzing…" : "Take photo"}
               </button>
             )}
-            <button onClick={resetSession}>Reset session</button>
+            <button onClick={handleResetSession}>Reset session</button>
           </div>
 
           {/* WebRTC block */}
