@@ -14,11 +14,24 @@ DATASETS = {
 # ==========================================================
 
 def safe_copy(src: str, dest: str):
-    """Copy or move Kaggle dataset contents into target folder."""
+    """Copy or move Kaggle dataset contents into target folder, excluding trash folder."""
     os.makedirs(dest, exist_ok=True)
-    for root, _, files in os.walk(src):
+    for root, dirs, files in os.walk(src):
+        # Remove 'trash' from dirs list to skip processing that directory
+        if 'trash' in dirs:
+            dirs.remove('trash')
+            trash_path = os.path.join(root, 'trash')
+            if os.path.exists(trash_path):
+                print(f"   🗑️  Removing trash folder: {trash_path}")
+                shutil.rmtree(trash_path)
+
         rel_root = os.path.relpath(root, src)
         target_dir = os.path.join(dest, rel_root)
+        
+        # Skip if this is a trash directory
+        if 'trash' in target_dir.lower():
+            continue
+            
         os.makedirs(target_dir, exist_ok=True)
         for file in files:
             src_file = os.path.join(root, file)
