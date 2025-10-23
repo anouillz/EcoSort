@@ -15,7 +15,7 @@ CONF_TRESHHOLD = 0.5
 router = APIRouter(prefix="/predict", tags=["predict"])
 
 # load our prediction model 
-MODEL_PATH = Path("ML/model/garbage_classification_model_12k.pth")
+MODEL_PATH = Path("ML/model/garbage_classification_model_11k.pth")
 
 try:
     model = load_model(MODEL_PATH)
