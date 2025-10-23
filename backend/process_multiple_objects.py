@@ -4,15 +4,15 @@ import numpy as np
 from PIL import Image
 import os
 
-# Load pretrained YOLOv8 model (COCO dataset) once
-model = YOLO("yolov8n.pt")
+# Load yolo model (here: latest one with only segmentation)
+model = YOLO("yolo11n-seg.pt")  
 
 def crop_multiple_objects(
     file,
     output_dir="yolo_output",
     conf_thresh=0.35,          # raise to reduce false positives
     min_area_ratio=0.002,      # drop tiny boxes (<0.2% of image)
-    max_area_ratio=0.80,       # drop huge boxes (>80% of image)
+    max_area_ratio=0.70,       # drop huge boxes (>70% of image)
     border_tol_ratio=0.005,    # drop boxes that touch all 4 borders
     allowed_classes=None       # optional set of class ids to keep
 ):
@@ -23,6 +23,7 @@ def crop_multiple_objects(
         file.file.seek(0)
     except Exception:
         pass
+
     file_bytes = file.file.read()
     np_arr = np.frombuffer(file_bytes, dtype=np.uint8)
     img_bgr = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
@@ -32,12 +33,13 @@ def crop_multiple_objects(
     h, w = img_bgr.shape[:2]
     os.makedirs(output_dir, exist_ok=True)
 
-    # Apply a higher confidence and standard IoU during prediction
-    results = model(img_bgr, conf=conf_thresh, iou=0.5)
+    # results of yolo detection
+    results = model(img_bgr, conf=0.1, iou=0.5)
 
     crops = []
     border_tol = int(max(1, border_tol_ratio * min(w, h)))
 
+    # post processing for frontend display
     for res in results:
         boxes = res.boxes.xyxy
         confs = res.boxes.conf
