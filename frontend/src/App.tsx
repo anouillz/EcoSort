@@ -87,7 +87,9 @@ export default function App() {
       } else {
         const { json } = await postImage("/predict/many", blob);
         setMany(json);
-        if (json?.counts) addCounts(json.counts);
+        const tracker = getTracker(cameraId);
+        const fresh = tracker.dedupe(json.items);
+        if (fresh.length) addCounts(countByMaterial(fresh));
       }
     } catch (e) { console.error(e); }
     finally { setBusy(false); }
